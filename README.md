@@ -27,7 +27,7 @@ When loaded, the agent:
 
 1. Audits the codebase with grep commands for LLM call sites, existing instrumentation, prompts in logs, streams missing usage, swallowed errors, and missing user/session/feature attribution.
 2. Applies fixes in order of impact: a single capture point, a fixed per-call record, TTFT vs total latency, error classification and fallback visibility, cost attribution with safe cardinality, agent trace structure using OpenTelemetry GenAI conventions, PII redaction, sampling, feedback linkage, and production evals.
-3. Sets up gateway-level capture with Bifrost (open-source AI gateway) where it removes per-SDK instrumentation: request logs and log API, Prometheus metrics, OpenTelemetry export to any collector, per-request dimensions, content-logging controls, correlation response headers, and the Maxim plugin for tracing and evals on production traffic.
+3. Sets up gateway-level capture with Bifrost (open-source AI gateway) where it removes per-SDK instrumentation: request logs and log API, Prometheus metrics, OpenTelemetry export to any collector, per-request dimensions, content-logging controls, and correlation response headers.
 4. Builds dashboards and alert rules with example PromQL, and verifies the setup end to end.
 
 Code examples are in Python and TypeScript; gateway config is JSON; checks are curl.
@@ -39,7 +39,7 @@ llm-observability-stack/
   SKILL.md                          # workflow: diagnose, core practices, Bifrost setup, verify, common mistakes
   references/
     what-to-capture.md              # per-call record, cardinality, OTel GenAI conventions, agent traces, TTFT, PII redaction, sampling, feedback, production evals
-    bifrost-telemetry.md            # logs and log store, content logging, dimensions, Prometheus, OTel, Maxim plugin, response headers
+    bifrost-telemetry.md            # logs and log store, content logging, dimensions, Prometheus, OTel, response headers
     dashboards-and-alerts.md        # PromQL panels, alert rules, thresholds, runbook
   README.md
   LICENSE
@@ -48,7 +48,6 @@ llm-observability-stack/
 ## Links
 
 - Bifrost: https://github.com/maximhq/bifrost (docs: https://docs.getbifrost.ai)
-- Maxim: https://www.getmaxim.ai
 - OpenTelemetry GenAI semantic conventions: https://opentelemetry.io/docs/specs/semconv/gen-ai/
 
 ## License

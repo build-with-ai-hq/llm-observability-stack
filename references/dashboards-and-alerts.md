@@ -25,7 +25,7 @@ One dashboard, top to bottom, with template variables `$provider`, `$model`, `$f
 3. **Latency**: p50/p95/p99 provider latency by model; TTFT by model; inter-token latency; gateway overhead.
 4. **Spend**: cost per hour by feature/team/model, tokens per minute, cost per request, output/input token ratio.
 5. **Resilience**: fallback share, retries, key rotations by reason, key health.
-6. **Quality** (from your eval store or Maxim): eval score by feature and prompt version, negative-feedback rate.
+6. **Quality** (from your eval store): eval score by feature and prompt version, negative-feedback rate.
 
 Link panels to the logs: a Grafana data link to `http://<bifrost>:8080/logs` (or your trace backend filtered by `provider`/`model`) closes the loop from graph to request.
 

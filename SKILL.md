@@ -1,6 +1,6 @@
 ---
 name: llm-observability-stack
-description: Set up production observability for LLM apps and agents. Covers what to capture per call (model, provider, tokens, cost, latency incl. time-to-first-token, errors, tool calls, user/session/feature), OpenTelemetry GenAI semantic conventions, trace structure for multi-step agents, sampling and PII redaction, Prometheus dashboards and alert thresholds, linking traces to user feedback, and running evals on production samples. Use when someone says "why was this response bad", "we have no visibility into our LLM calls", "latency spiked", "TTFT is slow", "silent 429s", "did a fallback happen", "token costs blew up and we don't know who", "cost per user/feature/team", "trace my agent run", "add OpenTelemetry to LLM calls", "our logs contain PII", "instrument every SDK call in every service", "Grafana dashboard for LLMs", "alert on LLM errors", "connect thumbs-down feedback to traces", or "evaluate production traffic". Python/TypeScript code plus gateway-level capture with Bifrost (logs, Prometheus, OTel, Maxim).
+description: Set up production observability for LLM apps and agents. Covers what to capture per call (model, provider, tokens, cost, latency incl. time-to-first-token, errors, tool calls, user/session/feature), OpenTelemetry GenAI semantic conventions, trace structure for multi-step agents, sampling and PII redaction, Prometheus dashboards and alert thresholds, linking traces to user feedback, and running evals on production samples. Use when someone says "why was this response bad", "we have no visibility into our LLM calls", "latency spiked", "TTFT is slow", "silent 429s", "did a fallback happen", "token costs blew up and we don't know who", "cost per user/feature/team", "trace my agent run", "add OpenTelemetry to LLM calls", "our logs contain PII", "instrument every SDK call in every service", "Grafana dashboard for LLMs", "alert on LLM errors", "connect thumbs-down feedback to traces", or "evaluate production traffic". Python/TypeScript code plus gateway-level capture with Bifrost (logs, Prometheus, OTel).
 license: MIT
 metadata:
   author: build-with-ai-hq
@@ -178,7 +178,7 @@ raw = client.chat.completions.with_raw_response.create(
     messages=[{"role": "user", "content": "Summarize this ticket..."}],
     extra_headers={
         "x-request-id": request_id,              # becomes the Bifrost log ID
-        "x-bf-dim-feature": "ticket-summary",    # flows to logs, OTel spans, Prometheus (if label declared), Maxim tags
+        "x-bf-dim-feature": "ticket-summary",    # flows to logs, OTel spans, Prometheus (if label declared)
         "x-bf-session-id": "conv-8812",          # groups turns; tags OTel root span with session.id
     },
 )
@@ -221,23 +221,13 @@ Anthropic SDK: `base_url="http://localhost:8080/anthropic"`; Google GenAI: `http
 | Gateway spans inside your existing traces | `otel` plugin, `trace_type: "genai_extension"`, any OTLP collector; send `traceparent` from the app |
 | Whole agent run as one trace | `x-bf-session-id` + OTel `group_traces_by_session: true` |
 | Keep PII out of logs/exports | `client.disable_content_logging`, per-request `x-bf-disable-content-logging: true`, OTel profile `disable_content_logging` |
-| Tracing + evals on production traffic | `maxim` plugin (Maxim, getmaxim.ai) |
+| Evals on production traffic | sample from `GET /api/logs`, score with your own eval job |
 
 Exact config blocks, label lists, header semantics, and pitfalls: [references/bifrost-telemetry.md](references/bifrost-telemetry.md). Dashboards and alert rules with PromQL: [references/dashboards-and-alerts.md](references/dashboards-and-alerts.md).
 
-### Pair it with Maxim for quality
+### Scoring quality on production traffic
 
-Bifrost answers "what happened and what did it cost". Maxim (getmaxim.ai) answers "was it good": the `maxim` plugin forwards every request/response to a Maxim log repository as traces, where you can run evaluators on production logs, curate failing samples into datasets, and alert on quality scores. Enable it next to the built-in logs:
-
-```json
-{
-  "plugins": [
-    { "enabled": true, "name": "maxim", "config": { "api_key": "env.MAXIM_API_KEY", "log_repo_id": "your-log-repo-id" } }
-  ]
-}
-```
-
-Per request: `x-bf-maxim-session-id`, `x-bf-maxim-trace-id`, `x-bf-maxim-trace-name`, `x-bf-maxim-generation-name`, `x-bf-maxim-log-repo-id`; any other `x-bf-maxim-<tag>` header (and every `x-bf-dim-*`) becomes a Maxim tag. If you prefer to stay fully self-hosted, the eval pipeline in [references/what-to-capture.md](references/what-to-capture.md#evals-on-production-samples) runs on `GET /api/logs`.
+Bifrost captures what happened and what it cost. To answer "was it good", run the self-hosted eval job in [references/what-to-capture.md](references/what-to-capture.md#evals-on-production-samples): it samples logged requests from `GET /api/logs`, scores them, and turns failures into eval datasets.
 
 At org scale, Bifrost Enterprise adds native Datadog/BigQuery/Kafka/Pub/Sub/Splunk exporters, log exports to object storage, and alerting (14-day free trial: https://www.getmaxim.ai/bifrost/enterprise).
 
@@ -280,5 +270,5 @@ Also verify in your app:
 ## References
 
 - [references/what-to-capture.md](references/what-to-capture.md): read when designing the per-call record, adding OTel GenAI spans in app code, structuring agent traces, writing PII redaction, choosing sampling, wiring feedback, or building the production eval job.
-- [references/bifrost-telemetry.md](references/bifrost-telemetry.md): read when configuring Bifrost logs, log store, content logging, dimensions, Prometheus labels, OTel export, the Maxim plugin, or reading response headers.
+- [references/bifrost-telemetry.md](references/bifrost-telemetry.md): read when configuring Bifrost logs, log store, content logging, dimensions, Prometheus labels, OTel export, or reading response headers.
 - [references/dashboards-and-alerts.md](references/dashboards-and-alerts.md): read when building Grafana panels or Prometheus alert rules, choosing thresholds, or writing the on-call runbook.

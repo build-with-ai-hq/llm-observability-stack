@@ -1,6 +1,6 @@
 # Bifrost telemetry reference
 
-Configuration for capturing LLM telemetry at the gateway with open-source Bifrost: request logs, content controls, per-request dimensions, Prometheus metrics, OpenTelemetry export, the Maxim plugin, and response headers. Doc pages are linked per section; check them when a field here does not match your version.
+Configuration for capturing LLM telemetry at the gateway with open-source Bifrost: request logs, content controls, per-request dimensions, Prometheus metrics, OpenTelemetry export, and response headers. Doc pages are linked per section; check them when a field here does not match your version.
 
 ## Contents
 
@@ -10,13 +10,12 @@ Configuration for capturing LLM telemetry at the gateway with open-source Bifros
 - [Attribution: dimensions, logging headers, sessions](#attribution-dimensions-logging-headers-sessions)
 - [Prometheus metrics](#prometheus-metrics)
 - [OpenTelemetry export](#opentelemetry-export)
-- [Maxim plugin: tracing and evals on production traffic](#maxim-plugin-tracing-and-evals-on-production-traffic)
 - [Response headers](#response-headers)
 - [Full config.json example](#full-configjson-example)
 
 ## How capture works
 
-Every request through Bifrost (OpenAI-compatible `/v1/*` and drop-in routes `/openai`, `/anthropic`, `/genai`, `/langchain`, `/litellm`) passes through plugins. The logging plugin and the telemetry (Prometheus) plugin run in gateway mode by default and write asynchronously, off the request path. Add `otel` and `maxim` plugins to export elsewhere. Nothing changes in app code except the base URL and optional headers.
+Every request through Bifrost (OpenAI-compatible `/v1/*` and drop-in routes `/openai`, `/anthropic`, `/genai`, `/langchain`, `/litellm`) passes through plugins. The logging plugin and the telemetry (Prometheus) plugin run in gateway mode by default and write asynchronously, off the request path. Add the `otel` plugin to export elsewhere. Nothing changes in app code except the base URL and optional headers.
 
 ## Request logs and the log store
 
@@ -141,7 +140,7 @@ Docs: https://docs.getbifrost.ai/providers/request-options.md
 
 | Header | Goes to | Use for |
 |---|---|---|
-| `x-bf-dim-<name>: <value>` | log metadata, OTel span attributes, Prometheus label `<name>` (only if declared in `client.prometheus_labels`), Maxim tags | feature, team, environment, tenant tier: low-cardinality dimensions |
+| `x-bf-dim-<name>: <value>` | log metadata, OTel span attributes, Prometheus label `<name>` (only if declared in `client.prometheus_labels`) | feature, team, environment, tenant tier: low-cardinality dimensions |
 | `x-bf-lh-<name>: <value>` | log metadata only | high-cardinality IDs you want searchable in logs, not in metrics |
 | `client.logging_headers: ["X-Tenant-ID"]` | log metadata | capturing headers your services already send |
 | `x-bf-session-id: <id>` | OTel `session.id` on the root span; session grouping in logs and traces; session affinity | multi-turn conversations, agent runs |
@@ -206,7 +205,7 @@ Custom labels from dimensions:
 }
 ```
 
-Then send `x-bf-dim-feature: ticket-summary` etc. Only declared names become labels; undeclared `x-bf-dim-*` values still reach logs, spans, and Maxim.
+Then send `x-bf-dim-feature: ticket-summary` etc. Only declared names become labels; undeclared `x-bf-dim-*` values still reach logs and spans.
 
 Multi-node: scraping behind a load balancer misses nodes. Scrape each pod directly (Kubernetes service discovery) or enable the Push Gateway:
 
@@ -283,44 +282,6 @@ Token attribute names in Bifrost spans may differ from the latest semconv names 
 
 Joining app traces: instrument your HTTP client so `traceparent` is sent to Bifrost; the gateway span then nests under your agent step span, and `x-bifrost-trace-id` in the response confirms the trace ID.
 
-## Maxim plugin: tracing and evals on production traffic
-
-Docs: https://docs.getbifrost.ai/features/observability/maxim.md
-
-Maxim (getmaxim.ai) is an evaluation and observability platform for AI agents. The Bifrost `maxim` plugin forwards every request and response to a Maxim log repository as traces and generations. In Maxim you then run evaluators on production logs, curate failing logs into datasets for offline experiments, review with human annotation, and alert when quality or latency degrade. Use it when you want production scoring without building and running your own eval job.
-
-```json
-{
-  "plugins": [
-    {
-      "enabled": true,
-      "name": "maxim",
-      "config": {
-        "api_key": "env.MAXIM_API_KEY",
-        "log_repo_id": "your-default-log-repo-id"
-      }
-    }
-  ]
-}
-```
-
-If `env.` is not accepted for `api_key` in your version, inject it at deploy time.
-
-Per-request headers:
-
-| Header | Effect |
-|---|---|
-| `x-bf-maxim-log-repo-id` | send this request to a different repository (e.g. per product) |
-| `x-bf-maxim-session-id` | group traces into a Maxim session (conversation / agent run) |
-| `x-bf-maxim-trace-id`, `x-bf-maxim-trace-name` | attach the generation to your own trace ID / name |
-| `x-bf-maxim-generation-id`, `x-bf-maxim-generation-name` | name the generation (e.g. `rerank-step`) |
-| `x-bf-maxim-<tag>` | any other suffix becomes a tag |
-| `x-bf-dim-<name>` | also becomes a Maxim tag (lower priority than an explicit `x-bf-maxim-<name>`) |
-
-Repository selection: header first, then `log_repo_id` from config; if neither is set, the request is not sent to Maxim. Supported request types: chat and text completions (plus Agent Gateway operations).
-
-Linking feedback: use your `request_id` as `x-bf-maxim-trace-id` (or send it as a tag) so feedback collected in your app can be matched to the Maxim trace.
-
 ## Response headers
 
 Docs: https://docs.getbifrost.ai/providers/response-headers.md
@@ -372,11 +333,6 @@ Legacy `x-bifrost-provider` and `x-bifrost-resolved-model` are still sent; prefe
         "protocol": "http",
         "group_traces_by_session": true
       }
-    },
-    {
-      "enabled": true,
-      "name": "maxim",
-      "config": { "api_key": "env.MAXIM_API_KEY", "log_repo_id": "your-log-repo-id" }
     }
   ]
 }

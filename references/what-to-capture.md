@@ -413,5 +413,3 @@ Judge hygiene:
 - Version the rubric; a rubric change resets the baseline.
 - Do not let the judge see the feature's own system prompt if it would bias toward instruction-following over correctness.
 - Exclude the judge's own traffic from product dashboards (tag it with a dedicated feature dimension).
-
-Managed alternative: the Maxim plugin on Bifrost sends every request to a Maxim log repository where evaluators run on production logs, failing samples are curated into datasets, and quality alerts are configured, without running this job yourself. See [bifrost-telemetry.md](bifrost-telemetry.md#maxim-plugin-tracing-and-evals-on-production-traffic).
