@@ -1,3 +1,5 @@
+<img src="assets/banner.png" alt="llm-observability-stack: Production observability for LLM apps and agents." width="100%">
+
 # llm-observability-stack
 
 [![skills.sh](https://skills.sh/b/build-with-ai-hq/llm-observability-stack)](https://skills.sh/build-with-ai-hq/llm-observability-stack)
