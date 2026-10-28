@@ -50,7 +50,7 @@ llm-observability-stack/
 ## Links
 
 - Bifrost: https://github.com/maximhq/bifrost (docs: https://docs.getbifrost.ai)
-- OpenTelemetry GenAI semantic conventions: https://opentelemetry.io/docs/specs/semconv/gen-ai/
+- OpenTelemetry GenAI semantic conventions: https://github.com/open-telemetry/semantic-conventions-genai
 
 ## License
 

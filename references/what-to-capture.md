@@ -84,7 +84,7 @@ Core attributes:
 
 Content (opt-in in the conventions, because it is sensitive): `gen_ai.input.messages`, `gen_ai.output.messages`, `gen_ai.system_instructions`, `gen_ai.tool.call.arguments`, `gen_ai.tool.call.result`. Many instrumentations gate this on `OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT=true`.
 
-Metrics defined by the conventions: `gen_ai.client.token.usage` (histogram, attribute `gen_ai.token.type` = `input`/`output`), `gen_ai.client.operation.duration` (seconds), and server-side `gen_ai.server.time_to_first_token` and `gen_ai.server.time_per_output_token`.
+Metrics defined by the conventions (Development status; names have changed between versions, so check the version you emit): token counters `gen_ai.client.inference.usage.input_tokens`, `.output_tokens`, `.cache_read.input_tokens`, `.cache_write.input_tokens` and `.reasoning.output_tokens`; per-operation token histograms `gen_ai.client.inference.operation.input_tokens` and `.output_tokens`; `gen_ai.client.operation.duration` (seconds); and server-side `gen_ai.server.time_to_first_token` and `gen_ai.server.time_per_output_token`.
 
 Custom attributes that the conventions do not cover (cost, feature, prompt version) should use your own namespace, for example `app.feature`, `app.prompt.version`, `app.cost_usd`.
 
